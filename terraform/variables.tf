@@ -24,3 +24,5 @@ variable "environment_variables" {}
 
 variable "capabilities" {}
 
+variable "service_health_check" {}
+

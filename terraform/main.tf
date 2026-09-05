@@ -14,6 +14,7 @@ module "service" {
   service_task_execution_role = aws_iam_role.main.arn
   vpc_id                      = data.aws_ssm_parameter.vpc_id.value
 
+  service_health_check = var.service_health_check
 
   environment_variables = var.environment_variables
 
