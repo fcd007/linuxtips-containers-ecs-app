@@ -1,5 +1,5 @@
 resource "aws_iam_role" "main" {
-  name = format("%s-role", var.service_name)
+  name = format("%s-service-role", var.cluster_name)
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -17,7 +17,7 @@ resource "aws_iam_role" "main" {
 }
 
 resource "aws_iam_role_policy" "secs_task_execution_role" {
-  name = format("%s-policy", var.service_name)
+  name = format("%s-policy", var.cluster_name)
   role = aws_iam_role.main.id
 
   policy = jsonencode({

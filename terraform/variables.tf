@@ -26,3 +26,9 @@ variable "capabilities" {}
 
 variable "service_health_check" {}
 
+variable "service_launch_type" {}
+
+variable "service_task_count" {}
+
+variable "service_hosts" {}
+
