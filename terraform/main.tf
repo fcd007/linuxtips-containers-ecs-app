@@ -30,4 +30,20 @@ module "service" {
     data.aws_ssm_parameter.private_subnet_2.value,
     data.aws_ssm_parameter.private_subnet_3.value,
   ]
+
+
+  # autoscaling
+  scale_type   = var.scale_type
+  task_minimum = var.task_minimum
+  task_maximum = var.task_maximum
+
+  # autscaling de cpu
+
+  scale_out_cpu_threshold       = var.scale_out_cpu_threshold
+  scale_out_adjustment          = var.scale_out_adjustment
+  scale_out_comparison_operator = var.scale_out_comparison_operator
+  scale_out_statistic           = var.scale_out_statistic
+  scale_out_period              = var.scale_out_period
+  scale_out_evaluation_period   = var.scale_out_evaluation_period
+  scale_out_cooldown            = var.scale_out_cooldown
 }

@@ -1,0 +1,7 @@
+services:
+  ecs-linuxtips:
+    build: .
+    container_name: ecs-linuxtips
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

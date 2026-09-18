@@ -32,3 +32,24 @@ variable "service_task_count" {}
 
 variable "service_hosts" {}
 
+variable "scale_type" {}
+
+variable "task_minimum" {}
+
+variable "task_maximum" {}
+
+### autscaling de cpu
+
+variable "scale_out_cpu_threshold" {}
+
+variable "scale_out_adjustment" {}
+
+variable "scale_out_comparison_operator" {}
+
+variable "scale_out_statistic" {}
+
+variable "scale_out_period" {}
+
+variable "scale_out_evaluation_period" {}
+
+variable "scale_out_cooldown" {}
