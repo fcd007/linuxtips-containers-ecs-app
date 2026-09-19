@@ -38,7 +38,7 @@ variable "task_minimum" {}
 
 variable "task_maximum" {}
 
-### autscaling de cpu
+### autoscaling de cpu out
 
 variable "scale_out_cpu_threshold" {}
 
@@ -53,3 +53,19 @@ variable "scale_out_period" {}
 variable "scale_out_evaluation_period" {}
 
 variable "scale_out_cooldown" {}
+
+### autoscaling de cpu in
+
+variable "scale_in_cpu_threshold" {}
+
+variable "scale_in_adjustment" {}
+
+variable "scale_in_comparison_operator" {}
+
+variable "scale_in_statistic" {}
+
+variable "scale_in_period" {}
+
+variable "scale_in_evaluation_period" {}
+
+variable "scale_in_cooldown" {}
