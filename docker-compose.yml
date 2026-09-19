@@ -1,7 +1,12 @@
 services:
-  ecs-linuxtips:
-    build: .
+  ecs-linux-tips:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
     container_name: ecs-linuxtips
+
     ports:
       - "8080:8080"
+
     restart: unless-stopped
