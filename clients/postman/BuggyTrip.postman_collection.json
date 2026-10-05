@@ -1,0 +1,157 @@
+{
+  "info": {
+    "_postman_id": "94fe659f-0f4e-4878-84bf-abcde0123456",
+    "name": "BuggyTrip - ECS AWS",
+    "description": "Testes da API BuggyTrip pelo DNS do ALB. A regra de roteamento aceita chip.linuxtips.demo e o DNS do próprio ALB. O token de CLIENTE é capturado no login; o token de ADMIN precisa ser fornecido por uma conta administrativa provisionada separadamente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://linuxtips-ecs-cluster-ingress-1313503812.us-east-2.elb.amazonaws.com" },
+    { "key": "hostHeader", "value": "linuxtips-ecs-cluster-ingress-1313503812.us-east-2.elb.amazonaws.com" },
+    { "key": "email", "value": "" },
+    { "key": "password", "value": "TroqueEstaSenha@123" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "bugueiroId", "value": "" },
+    { "key": "avaliacaoId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 - Disponibilidade e documentação",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Host", "value": "{{hostHeader}}" }],
+            "url": "{{baseUrl}}/actuator/health"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200 e API UP', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().status).to.eql('UP');", "});"] } }]
+        },
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Host", "value": "{{hostHeader}}" }],
+            "url": "{{baseUrl}}/v3/api-docs"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('OpenAPI publicado', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().paths).to.have.property('/api/v1/auth/login');", "});"] } }]
+        },
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Host", "value": "{{hostHeader}}" }],
+            "url": "{{baseUrl}}/swagger-ui.html"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Autenticação",
+      "item": [
+        {
+          "name": "Criar cliente de teste",
+          "event": [{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["if (!pm.environment.get('email')) {", "  pm.environment.set('email', 'cliente.postman.' + Date.now() + '@example.com');", "}"] } }, { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Cliente criado', function () {", "  pm.response.to.have.status(201);", "  const user = pm.response.json();", "  pm.expect(user.ativo).to.eql(true);", "  pm.environment.set('userId', String(user.id));", "});"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Host", "value": "{{hostHeader}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Cliente Teste Postman\",\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{password}}\",\n  \"tipo\": \"CLIENTE\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/users"
+          }
+        },
+        {
+          "name": "Login CLIENTE - captura token e userId",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Login retornou JWT', function () {", "  pm.response.to.have.status(200);", "  const result = pm.response.json();", "  pm.expect(result.token).to.be.a('string').and.not.empty;", "  pm.environment.set('token', result.token);", "  pm.environment.set('userId', String(result.userId));", "});"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Host", "value": "{{hostHeader}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{password}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/auth/login"
+          }
+        },
+        {
+          "name": "Login ADMIN - captura token administrativo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Host", "value": "{{hostHeader}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"senha\": \"{{adminPassword}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Login ADMIN retornou JWT', function () {", "  pm.response.to.have.status(200);", "  const result = pm.response.json();", "  pm.expect(result.tipo).to.eql('ADMIN');", "  pm.environment.set('adminToken', result.token);", "});"] } }]
+        }
+      ]
+    },
+    {
+      "name": "03 - Usuários",
+      "item": [
+        {
+          "name": "Buscar meu usuário",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/users/{{userId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuário autenticado encontrado e ativo', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().ativo).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "Listar usuários - ADMIN",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/users?page=0&size=100&sort=id,asc" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Listagem administrativa permitida', function () {", "  pm.response.to.have.status(200);", "});"] } }]
+        },
+        {
+          "name": "Atualizar meu usuário",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Host", "value": "{{hostHeader}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Cliente Teste Postman Atualizado\",\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{password}}\",\n  \"tipo\": \"CLIENTE\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/users/{{userId}}" }
+        },
+        {
+          "name": "Desativar meu usuário - execute por último",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/users/{{userId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Usuário desativado', function () {", "  pm.response.to.have.status(204);", "});"] } }]
+        }
+      ]
+    },
+    {
+      "name": "04 - Avaliações",
+      "item": [
+        {
+          "name": "Listar avaliações",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/avaliacoes?page=0&size=20&sort=id,desc" }
+        },
+        {
+          "name": "Listar avaliações por BUGUEIRO",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/avaliacoes?bugueiroId={{bugueiroId}}&page=0&size=20" }
+        },
+        {
+          "name": "Criar avaliação - CLIENTE autenticado",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Avaliação criada', function () {", "  pm.response.to.have.status(201);", "  pm.environment.set('avaliacaoId', String(pm.response.json().id));", "});"] } }],
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Host", "value": "{{hostHeader}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"seguranca\": 10,\n  \"conhecimentoRoteiro\": 9,\n  \"confortoVeiculo\": 9,\n  \"simpatiaMotorista\": 10,\n  \"experienciaGeral\": 10,\n  \"adaptabilidade\": 8,\n  \"paradasInteressantes\": 9,\n  \"diferencial\": \"Teste de integração Postman\",\n  \"feedback\": \"Avaliação criada durante teste da API\",\n  \"avaliadorId\": {{userId}},\n  \"bugueiroId\": {{bugueiroId}}\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/avaliacoes" }
+        },
+        {
+          "name": "Buscar avaliação por ID",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/avaliacoes/{{avaliacaoId}}" }
+        },
+        {
+          "name": "Atualizar avaliação",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Host", "value": "{{hostHeader}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"seguranca\": 10,\n  \"conhecimentoRoteiro\": 10,\n  \"confortoVeiculo\": 9,\n  \"simpatiaMotorista\": 10,\n  \"experienciaGeral\": 10,\n  \"adaptabilidade\": 9,\n  \"paradasInteressantes\": 9,\n  \"diferencial\": \"Atualizada pelo Postman\",\n  \"feedback\": \"Teste de atualização da API\",\n  \"avaliadorId\": {{userId}},\n  \"bugueiroId\": {{bugueiroId}}\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/avaliacoes/{{avaliacaoId}}" }
+        },
+        {
+          "name": "Excluir avaliação - execute por último",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "DELETE", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/avaliacoes/{{avaliacaoId}}" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Avaliação excluída', function () {", "  pm.response.to.have.status(204);", "});"] } }]
+        }
+      ]
+    },
+    {
+      "name": "05 - Autorização e erros esperados",
+      "item": [
+        {
+          "name": "Endpoint protegido sem JWT - deve retornar 403",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/avaliacoes" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Acesso anônimo bloqueado', function () {", "  pm.response.to.have.status(403);", "});"] } }]
+        },
+        {
+          "name": "Listagem de usuários com CLIENTE - deve retornar 403",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "header": [{ "key": "Host", "value": "{{hostHeader}}" }], "url": "{{baseUrl}}/api/v1/users?page=0&size=20" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Somente ADMIN pode listar usuários', function () {", "  pm.response.to.have.status(403);", "});"] } }]
+        }
+      ]
+    }
+  ]
+}

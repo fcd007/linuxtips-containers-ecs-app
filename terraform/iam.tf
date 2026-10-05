@@ -16,33 +16,23 @@ resource "aws_iam_role" "main" {
   })
 }
 
-resource "aws_iam_role_policy" "secs_task_execution_role" {
-  name = format("%s-policy", var.cluster_name)
+resource "aws_iam_role_policy_attachment" "task_execution" {
+  role       = aws_iam_role.main.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy" "database_secret_access" {
+  name = format("%s-database-secret", var.cluster_name)
   role = aws_iam_role.main.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action = [
-          "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-          "elasticloadbalancing:DeregisterTargets",
-          "elasticloadbalancing:Describe*",
-          "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-          "elasticloadbalancing:RegisterTargets",
-          "ec2:Describe*",
-          "ec2:AuthorizeSecurityGroupIngress",
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "s3:GetObject",
-        ],
-        Resource = "*",
+        Action   = ["secretsmanager:GetSecretValue"]
+        Resource = data.aws_secretsmanager_secret.database_credentials.arn
         Effect   = "Allow"
-      },
+      }
     ]
   })
 }

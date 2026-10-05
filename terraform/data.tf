@@ -17,3 +17,11 @@ data "aws_ssm_parameter" "private_subnet_2" {
 data "aws_ssm_parameter" "private_subnet_3" {
   name = var.ssm_private_subnet_3
 }
+
+data "aws_lb" "application" {
+  name = var.load_balancer_name
+}
+
+data "aws_secretsmanager_secret" "database_credentials" {
+  name = var.database_secret_name
+}

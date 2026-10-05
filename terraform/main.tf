@@ -19,9 +19,16 @@ module "service" {
   service_launch_type = var.service_launch_type
   service_task_count  = var.service_task_count
 
-  service_hosts = var.service_hosts
+  service_hosts = distinct(concat(var.service_hosts, [data.aws_lb.application.dns_name]))
 
-  environment_variables = var.environment_variables
+  environment_variables = concat(var.environment_variables, [
+    {
+      name  = "DB_URL"
+      value = "jdbc:postgresql://${var.database_service_name}.${var.database_private_namespace}:5432/${var.database_name}"
+    }
+  ])
+  secrets   = local.application_database_secrets
+  image_tag = var.image_tag
 
   capabilities = var.capabilities
 
@@ -55,4 +62,17 @@ module "service" {
   scale_in_evaluation_period   = var.scale_in_evaluation_period
   scale_in_cooldown            = var.scale_in_cooldown
 
+  scale_track_cpu = var.scale_track_cpu
+
+  depends_on = [
+    aws_iam_role_policy.database_secret_access
+  ]
+}
+
+removed {
+  from = module.service.aws_ecr_repository.main
+
+  lifecycle {
+    destroy = false
+  }
 }

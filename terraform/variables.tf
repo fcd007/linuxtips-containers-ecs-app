@@ -4,6 +4,16 @@ variable "cluster_name" {}
 
 variable "service_name" {}
 
+variable "load_balancer_name" {
+  type    = string
+  default = "linuxtips-ecs-cluster-ingress"
+}
+
+variable "image_tag" {
+  type    = string
+  default = "latest"
+}
+
 variable "service_port" {}
 
 variable "service_cpu" {}
@@ -19,6 +29,46 @@ variable "ssm_private_subnet_1" {}
 variable "ssm_private_subnet_2" {}
 
 variable "ssm_private_subnet_3" {}
+
+variable "database_secret_name" {
+  type    = string
+  default = "buggytrip/postgres"
+}
+
+variable "database_name" {
+  type    = string
+  default = "buggytrip"
+}
+
+variable "database_private_namespace" {
+  type    = string
+  default = "buggytrip.internal"
+}
+
+variable "database_service_name" {
+  type    = string
+  default = "postgres"
+}
+
+variable "database_ecs_cluster_name" {
+  type    = string
+  default = "buggytrip-database"
+}
+
+variable "database_instance_type" {
+  type    = string
+  default = "t3.medium"
+}
+
+variable "database_volume_size_gib" {
+  type    = number
+  default = 50
+}
+
+variable "postgres_image_tag" {
+  type    = string
+  default = "17-alpine"
+}
 
 variable "environment_variables" {}
 
@@ -69,3 +119,5 @@ variable "scale_in_period" {}
 variable "scale_in_evaluation_period" {}
 
 variable "scale_in_cooldown" {}
+
+variable "scale_track_cpu" {}
