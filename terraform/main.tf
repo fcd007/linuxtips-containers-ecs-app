@@ -1,7 +1,8 @@
 module "service" {
   source = "/home/dantas/Documents/github/Linuxtips/descomplicando-ecs/linuxtips-containers-ecs-service-module"
 
-  region = var.region
+  region                = var.region
+  create_ecr_repository = var.create_ecr_repository
 
   cluster_name   = var.cluster_name
   service_name   = var.service_name

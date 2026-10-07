@@ -1,5 +1,10 @@
 variable "region" {}
 
+variable "create_ecr_repository" {
+  type    = bool
+  default = true
+}
+
 variable "cluster_name" {}
 
 variable "service_name" {}
