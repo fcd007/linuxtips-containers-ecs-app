@@ -4,6 +4,11 @@ variable "cluster_name" {}
 
 variable "service_name" {}
 
+variable "create_ecr_repository" {
+  type    = bool
+  default = false
+}
+
 variable "load_balancer_name" {
   type    = string
   default = "linuxtips-ecs-cluster-ingress"
