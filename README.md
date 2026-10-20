@@ -93,4 +93,17 @@ O primeiro apply completo provisiona a capacidade ECS/EC2 dedicada ao banco, EBS
 - Usuário e senha são lidos de `buggytrip/postgres` no Secrets Manager; o state Terraform guarda apenas o ARN.
 - O AWS Backup cria snapshots diários às 05:00 UTC e mantém 14 dias. Faça testes de restauração para validar o RPO/RTO.
 - O banco é uma única instância em uma AZ. EBS não fornece failover multi-AZ; disponibilidade gerenciada e menor carga operacional exigem Amazon RDS.
-- Não execute `terraform destroy` em produção nem remova o guard `prevent_destroy` do volume sem plano de recuperação aprovado.
+
+### Remover o ambiente de desenvolvimento
+
+Os recursos da aplicação e do banco ficam no state `services/chip/dev`; os dois repositórios ECR ficam no state separado `services/chip/ecr`. Para remover todo o ambiente de desenvolvimento, destrua primeiro o app/banco e depois os repositórios:
+
+```bash
+terraform -chdir=terraform init -backend-config=environment/dev/backend.tfvars
+terraform -chdir=terraform destroy -refresh=false -var-file=environment/dev/terraform.tfvars
+
+terraform -chdir=terraform/ecr init -backend-config=../environment/dev/ecr.backend.tfvars
+terraform -chdir=terraform/ecr destroy -var-file=../environment/dev/ecr.tfvars
+```
+
+No state do app, `-refresh=false` evita que referências a recursos compartilhados já ausentes (como ALB/listener) bloqueiem a geração do plano; confira o state e o plano antes de confirmar, pois ele usa o último state conhecido. Revise cada plano e confirme a conta AWS e o backend antes de aprovar a destruição. Isso remove permanentemente o volume EBS do PostgreSQL, os recovery points do AWS Backup e todas as imagens dos repositórios ECR. VPC, subnets, ALB, listener, parâmetros SSM e o segredo do Secrets Manager são compartilhados/consultados como data sources e não são removidos por esses states. Não execute esse procedimento em produção.

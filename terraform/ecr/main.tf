@@ -22,28 +22,20 @@ provider "aws" {
 
 resource "aws_ecr_repository" "application" {
   name                 = "${var.cluster_name}/${var.service_name}"
-  force_delete         = false
+  force_delete         = true
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
-  }
-
-  lifecycle {
-    prevent_destroy = true
   }
 }
 
 resource "aws_ecr_repository" "postgres" {
   name                 = "${var.cluster_name}/postgres"
-  force_delete         = false
+  force_delete         = true
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
-  }
-
-  lifecycle {
-    prevent_destroy = true
   }
 }
